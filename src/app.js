@@ -1,3 +1,4 @@
+const fs = require('fs')
 const path = require('path')
 const express = require('express')
 const hbs = require('hbs')
@@ -44,6 +45,30 @@ app.get('/help', (req, res) => {
     })
 })
 
+app.get('/logs', (req, res) => {
+
+    //Get log data
+    try {
+        const dataBuffer = fs.readFileSync('src/logs.json')
+        const dataJSONString = dataBuffer.toString()
+        const dataJSON = JSON.parse(dataJSONString)
+
+        res.render('logs', {
+            title: 'Logs',
+            name: 'Mahesh',
+            logs: dataJSON
+        })
+
+    }
+    catch (e) {
+        res.render('logs', {
+            title: 'Logs',
+            name: 'Mahesh',
+            logs: 'Error:' + e
+        })
+    }
+})
+
 app.get('/weather', (req, res) => {
 
     if (!req.query.address) {
@@ -65,6 +90,19 @@ app.get('/weather', (req, res) => {
                     error: error
                 })
             }
+
+            //Update log
+            let date_ob = new Date()
+            const dataBuffer = fs.readFileSync('src/logs.json')
+            const dataJSON = JSON.parse(dataBuffer.toString())
+            dataJSON.push({
+                time: date_ob.getMonth() + '/' + date_ob.getDate() + '/' + date_ob.getFullYear() + ':' + date_ob.getHours() + '.' + date_ob.getMinutes(), 
+                messageOne: placeName,
+                messageTwo: forecastData
+            })
+            const updatedJSON = JSON.stringify(dataJSON)
+            fs.writeFileSync('src/logs.json', updatedJSON)
+            //
 
             res.send({
                 address: req.query.address,
